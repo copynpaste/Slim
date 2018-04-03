@@ -6,6 +6,9 @@
  * @copyright Copyright (c) 2011-2018 Josh Lockhart
  * @license   https://github.com/slimphp/Slim/blob/4.x/LICENSE.md (MIT License)
  */
+
+declare(strict_types=1);
+
 namespace Slim\Exception;
 
 class HttpMethodNotAllowedException extends HttpSpecializedException
@@ -21,9 +24,9 @@ class HttpMethodNotAllowedException extends HttpSpecializedException
     protected $description = 'The request method is not supported for the requested resource.';
 
     /**
-     * @return string
+     * @return array
      */
-    public function getAllowedMethods()
+    public function getAllowedMethods(): array
     {
         return $this->allowedMethods;
     }

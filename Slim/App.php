@@ -6,6 +6,9 @@
  * @copyright Copyright (c) 2011-2018 Josh Lockhart
  * @license   https://github.com/slimphp/Slim/blob/4.x/LICENSE.md (MIT License)
  */
+
+declare(strict_types=1);
+
 namespace Slim;
 
 use Psr\Container\ContainerInterface;
@@ -13,6 +16,8 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
+use Slim\Exception\HttpMethodNotAllowedException;
+use Slim\Exception\HttpNotFoundException;
 use Slim\Http\Headers;
 use Slim\Http\Request;
 use Slim\Http\Response;
@@ -41,12 +46,12 @@ class App
     private $container;
 
     /**
-     * @var \Slim\Interfaces\CallableResolverInterface
+     * @var CallableResolverInterface
      */
     protected $callableResolver;
 
     /**
-     * @var \Slim\Interfaces\RouterInterface
+     * @var RouterInterface
      */
     protected $router;
 
@@ -121,7 +126,7 @@ class App
      * @param string $key
      * @return bool
      */
-    public function hasSetting($key)
+    public function hasSetting(string $key): bool
     {
         return isset($this->settings[$key]);
     }
@@ -131,7 +136,7 @@ class App
      *
      * @return array
      */
-    public function getSettings()
+    public function getSettings(): array
     {
         return $this->settings;
     }
@@ -143,7 +148,7 @@ class App
      * @param mixed $defaultValue
      * @return mixed
      */
-    public function getSetting($key, $defaultValue = null)
+    public function getSetting(string $key, $defaultValue = null)
     {
         return $this->hasSetting($key) ? $this->settings[$key] : $defaultValue;
     }
@@ -164,7 +169,7 @@ class App
      * @param string $key
      * @param mixed $value
      */
-    public function addSetting($key, $value)
+    public function addSetting(string $key, $value)
     {
         $this->settings[$key] = $value;
     }
@@ -186,9 +191,9 @@ class App
     /**
      * Get callable resolver
      *
-     * @return CallableResolver|null
+     * @return CallableResolverInterface
      */
-    public function getCallableResolver()
+    public function getCallableResolver(): CallableResolverInterface
     {
         if (! $this->callableResolver instanceof CallableResolverInterface) {
             $this->callableResolver = new CallableResolver($this->container);
@@ -212,7 +217,7 @@ class App
      *
      * @return RouterInterface
      */
-    public function getRouter()
+    public function getRouter(): RouterInterface
     {
         if (! $this->router instanceof RouterInterface) {
             $router = new Router();
@@ -239,9 +244,9 @@ class App
      * @param  string $pattern  The route URI pattern
      * @param  callable|string  $callable The route callback routine
      *
-     * @return \Slim\Interfaces\RouteInterface
+     * @return RouteInterface
      */
-    public function get($pattern, $callable)
+    public function get(string $pattern, $callable): RouteInterface
     {
         return $this->map(['GET'], $pattern, $callable);
     }
@@ -252,9 +257,9 @@ class App
      * @param  string $pattern  The route URI pattern
      * @param  callable|string  $callable The route callback routine
      *
-     * @return \Slim\Interfaces\RouteInterface
+     * @return RouteInterface
      */
-    public function post($pattern, $callable)
+    public function post(string $pattern, $callable): RouteInterface
     {
         return $this->map(['POST'], $pattern, $callable);
     }
@@ -265,9 +270,9 @@ class App
      * @param  string $pattern  The route URI pattern
      * @param  callable|string  $callable The route callback routine
      *
-     * @return \Slim\Interfaces\RouteInterface
+     * @return RouteInterface
      */
-    public function put($pattern, $callable)
+    public function put(string $pattern, $callable): RouteInterface
     {
         return $this->map(['PUT'], $pattern, $callable);
     }
@@ -278,9 +283,9 @@ class App
      * @param  string $pattern  The route URI pattern
      * @param  callable|string  $callable The route callback routine
      *
-     * @return \Slim\Interfaces\RouteInterface
+     * @return RouteInterface
      */
-    public function patch($pattern, $callable)
+    public function patch(string $pattern, $callable): RouteInterface
     {
         return $this->map(['PATCH'], $pattern, $callable);
     }
@@ -291,9 +296,9 @@ class App
      * @param  string $pattern  The route URI pattern
      * @param  callable|string  $callable The route callback routine
      *
-     * @return \Slim\Interfaces\RouteInterface
+     * @return RouteInterface
      */
-    public function delete($pattern, $callable)
+    public function delete(string $pattern, $callable): RouteInterface
     {
         return $this->map(['DELETE'], $pattern, $callable);
     }
@@ -304,9 +309,9 @@ class App
      * @param  string $pattern  The route URI pattern
      * @param  callable|string  $callable The route callback routine
      *
-     * @return \Slim\Interfaces\RouteInterface
+     * @return RouteInterface
      */
-    public function options($pattern, $callable)
+    public function options(string $pattern, $callable): RouteInterface
     {
         return $this->map(['OPTIONS'], $pattern, $callable);
     }
@@ -317,9 +322,9 @@ class App
      * @param  string $pattern  The route URI pattern
      * @param  callable|string  $callable The route callback routine
      *
-     * @return \Slim\Interfaces\RouteInterface
+     * @return RouteInterface
      */
-    public function any($pattern, $callable)
+    public function any(string $pattern, $callable): RouteInterface
     {
         return $this->map(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], $pattern, $callable);
     }
@@ -333,7 +338,7 @@ class App
      *
      * @return RouteInterface
      */
-    public function map(array $methods, $pattern, $callable)
+    public function map(array $methods, string $pattern, $callable): RouteInterface
     {
         // Bind route callable to container, if present
         if ($this->container instanceof ContainerInterface && $callable instanceof \Closure) {
@@ -355,7 +360,7 @@ class App
      *
      * @return RouteInterface
      */
-    public function redirect($from, $to, $status = 302)
+    public function redirect(string $from, $to, int $status = 302): RouteInterface
     {
         $handler = function ($request, ResponseInterface $response) use ($to, $status) {
             return $response->withHeader('Location', (string)$to)->withStatus($status);
@@ -376,7 +381,7 @@ class App
      *
      * @return RouteGroupInterface
      */
-    public function group($pattern, $callable)
+    public function group(string $pattern, $callable): RouteGroupInterface
     {
         /** @var RouteGroup $group */
         $router = $this->getRouter();
@@ -403,7 +408,7 @@ class App
      * @param RequestInterface|null $request
      * @return ResponseInterface
      */
-    public function run(RequestInterface $request = null)
+    public function run(RequestInterface $request = null): ResponseInterface
     {
         // create request
         if ($request === null) {
@@ -429,7 +434,7 @@ class App
      * @param ResponseInterface $response
      * @return ResponseInterface
      */
-    public function respond(ResponseInterface $response)
+    public function respond(ResponseInterface $response): ResponseInterface
     {
         // Send response
         if (!headers_sent()) {
@@ -502,8 +507,10 @@ class App
      * @param  ResponseInterface      $response The most recent Response object
      *
      * @return ResponseInterface
+     * @throws HttpMethodNotAllowedException
+     * @throws HttpNotFoundException
      */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response)
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         // Get the route info
         $routeInfo = $request->getAttribute('routeInfo');
@@ -530,7 +537,7 @@ class App
      *
      * @throws \RuntimeException
      */
-    protected function finalize(ResponseInterface $response)
+    protected function finalize(ResponseInterface $response): ResponseInterface
     {
         if ($this->isEmptyResponse($response)) {
             return $response->withoutHeader('Content-Type')->withoutHeader('Content-Length');
@@ -548,7 +555,7 @@ class App
      * @param ResponseInterface $response
      * @return bool
      */
-    protected function isEmptyResponse(ResponseInterface $response)
+    protected function isEmptyResponse(ResponseInterface $response): bool
     {
         if (method_exists($response, 'isEmpty')) {
             return $response->isEmpty();

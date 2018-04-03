@@ -51,20 +51,6 @@ class RouterTest extends TestCase
     }
 
     /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage Route pattern must be a string
-     */
-    public function testMapWithInvalidPatternType()
-    {
-        $methods = ['GET'];
-        $pattern = ['foo'];
-        $callable = function ($request, $response, $args) {
-        };
-
-        $this->router->map($methods, $pattern, $callable);
-    }
-
-    /**
      * Base path is ignored by relativePathFor()
      */
     public function testRelativePathFor()
@@ -190,14 +176,6 @@ class RouterTest extends TestCase
         $route->setName('foo');
 
         $this->router->pathFor('bar', ['first' => 'josh', 'last' => 'lockhart']);
-    }
-
-    /**
-     * @expectedException \InvalidArgumentException
-     */
-    public function testSettingInvalidBasePath()
-    {
-        $this->router->setBasePath(['invalid']);
     }
 
     public function testCreateDispatcher()
